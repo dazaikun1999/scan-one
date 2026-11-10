@@ -67,6 +67,16 @@ th{color:var(--mute);font-weight:600;font-size:13px}
 .msg{min-height:20px;font-size:13px;font-weight:600}.msg.err{color:var(--red)}.msg.good{color:#17703a}
 .prog{display:flex;gap:6px}.prog i{flex:1;height:5px;border-radius:9px;background:var(--line)}.prog i.on{background:var(--red)}
 .prev{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--red)}
+.foot{display:flex;justify-content:flex-end;padding:28px 4px 8px}
+.foot button{background:none;border:0;color:var(--mute);font-size:12px;text-decoration:underline;padding:4px 6px}
+.foot button:hover{color:var(--red)}
+.mod{position:fixed;inset:0;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:16px;z-index:30}
+.mbox{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:18px;padding:22px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px}
+.mbox.wide{max-width:640px}.mbox img{width:100%;max-height:65vh;object-fit:contain;border-radius:10px}
+.mbox h2{margin:0}
+.ritem{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--line)}
+.ritem:first-child{border-top:0}
+.drive{display:inline-flex;gap:8px;align-items:center;background:var(--redsoft);color:var(--red);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700}
 @media (max-width:480px){.g2{grid-template-columns:1fr}}
 @media (max-width:860px){.cover{grid-template-columns:1fr}.s3,.s4,.s5,.s6,.s7,.s8{grid-column:span 12}.tag{display:none}.panel h1{font-size:24px}}
 @media (min-width:600px) and (max-width:860px){.s3{grid-column:span 6}}
@@ -152,8 +162,9 @@ th{color:var(--mute);font-weight:600;font-size:13px}
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" aria-selected="true" data-tab="overview">Overview</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="profile">My profile</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="reports">Medical reports</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="public">Emergency page</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="admin">Admin</button>
+      
     </div>
 
     <section id="t-overview" class="grid">
@@ -185,7 +196,7 @@ th{color:var(--mute);font-weight:600;font-size:13px}
     </section>
 
     <section id="t-public" class="hide">
-      <p class="mute" style="text-align:center">This is what a stranger sees after scanning your wristband. No login needed. Your NID and account details are never shown.</p>
+      <p class="mute" style="text-align:center">This is what a stranger sees after scanning your wristband. No login needed. Your NID, account details, and medical reports are never shown.</p>
       <div class="phone">
         <div class="avatar" style="margin:0 auto 10px">RH</div>
         <h2 style="margin:0;font-size:22px" id="pn">Rahim Hossain</h2>
@@ -196,7 +207,26 @@ th{color:var(--mute);font-weight:600;font-size:13px}
       </div>
     </section>
 
+    <section id="t-reports" class="grid hide">
+      <div class="card s5"><h2>Upload a medical report</h2>
+        <p class="mute">PDF, scan, PNG, JPG or JPEG, up to 4 MB each.</p>
+        <form id="fu" class="grid" style="gap:12px" onsubmit="return false">
+          <div class="s12"><label for="un">Report name</label><input id="un" placeholder="e.g. Blood test, May 2026" maxlength="80"></div>
+          <div class="s12"><label for="uf">Choose a file</label><input id="uf" type="file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"></div>
+          <div class="s12"><label for="us">Or scan with your phone camera</label><input id="us" type="file" accept="image/*" capture="environment"></div>
+          <div class="s12 msg err" id="umsg" role="alert"></div>
+          <div class="s12"><button class="btn" id="ubtn">Upload to Drive</button></div>
+        </form>
+      </div>
+      <div class="card s7"><h2>My reports</h2>
+        <p><span class="drive">Google Drive folder: “OneScan Medical Reports” (private)</span></p>
+        <p class="mute">Demo mode: files stay in this browser tab only. The real app saves them to your private Google Drive folder and loads them from there.</p>
+        <div id="rlist"></div>
+      </div>
+    </section>
+
     <section id="t-admin" class="grid hide">
+      <div class="s12 row" style="justify-content:space-between"><h2 style="margin:0">Admin dashboard</h2><button class="ghost" id="aexit">Exit admin</button></div>
       <div class="card s3"><h2>Users</h2><p class="stat">1,284</p></div>
       <div class="card s3"><h2>Wristbands</h2><p class="stat">2,000</p></div>
       <div class="card s3"><h2>Assigned</h2><p class="stat">1,284</p></div>
@@ -211,7 +241,25 @@ th{color:var(--mute);font-weight:600;font-size:13px}
       </div>
     </section>
   </div>
+<div class="foot"><button id="adm">Admin sign in</button></div>
 </main>
+
+<div class="mod hide" id="am"><form class="mbox" id="aform" role="dialog" aria-modal="true" aria-labelledby="amt">
+  <h2 id="amt">Admin sign in</h2>
+  <div><label for="au">Admin email</label><input id="au" type="email" autocomplete="username"></div>
+  <div><label for="ap">Password</label><input id="ap" type="password" autocomplete="current-password"></div>
+  <div class="msg err" id="aerr" role="alert"></div>
+  <p class="mute" style="margin:0">Demo login: admin@onescan.com / admin123</p>
+  <div class="row"><button class="btn">Sign in</button><button type="button" class="ghost" id="acancel">Cancel</button></div>
+</form></div>
+<div class="mod hide" id="dlg"><div class="mbox" role="dialog" aria-modal="true" aria-labelledby="dt">
+  <h2 id="dt"></h2><p class="mute" id="dm" style="margin:0"></p><input id="di" class="hide">
+  <div class="row"><button class="btn" id="dok">OK</button><button class="ghost" id="dno">Cancel</button></div>
+</div></div>
+<div class="mod hide" id="pv"><div class="mbox wide" role="dialog" aria-modal="true" aria-labelledby="pvt">
+  <div class="row" style="justify-content:space-between"><h2 id="pvt"></h2><button class="btn" id="pvc">Close</button></div>
+  <img id="pvi" alt="Report preview">
+</div></div>
 
 <script>
 const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
@@ -309,6 +357,65 @@ $('#rview').onclick=()=>{
   session(true);show('overview');toast('Registration saved');
 };
 $('#rlogout').onclick=()=>{rmode(false);toast('Logged out')};
+
+/* Admin sign in (small link, bottom right) */
+let adm=false,prevUser=false;
+function adminOff(){adm=false;$('.tabs').classList.remove('hide');$('.cover').classList.remove('hide')}
+$('#adm').onclick=()=>{if(adm){show('admin');return}$('#am').classList.remove('hide');$('#aerr').textContent='';$('#au').focus()};
+$('#acancel').onclick=()=>$('#am').classList.add('hide');
+$('#aform').onsubmit=e=>{
+  e.preventDefault();
+  if($('#au').value.trim().toLowerCase()!=='admin@onescan.com'||$('#ap').value!=='admin123'){$('#aerr').textContent='Incorrect admin email or password.';return}
+  prevUser=!$('#app').classList.contains('hide');
+  adm=true;$('#am').classList.add('hide');$('#ap').value='';
+  $('.tabs').classList.add('hide');$('.cover').classList.add('hide');
+  $('#app').classList.remove('hide');$('#out').classList.remove('hide');show('admin');toast('Admin signed in');
+};
+$('#aexit').onclick=()=>{adminOff();if(prevUser){session(true);show('overview')}else{session(false);rmode(false)}};
+$('#out').onclick=()=>{if(adm)adminOff();session(false);rmode(false);toast('Logged out')};
+
+/* Medical reports (demo storage; the real app stores in Google Drive) */
+const ALLOWED={'application/pdf':'PDF','image/png':'PNG','image/jpeg':'JPG'},EXT={pdf:'PDF',png:'PNG',jpg:'JPG',jpeg:'JPG'};
+const reports=[{id:1,name:'Blood test, May 2026',type:'PDF',size:182000,date:'2026-05-14'},{id:2,name:'Chest X-ray scan',type:'JPG',size:940000,date:'2026-06-02'}];
+let rid=3;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>n>1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
+function drawReports(){
+  $('#rlist').innerHTML=reports.map(r=>'<div class="ritem"><div><b>'+esc(r.name)+'</b><br><span class="mute">'+r.type+' · '+fmt(r.size)+' · '+r.date+'</span></div><div class="row"><button class="ghost" data-v="'+r.id+'">View</button><button class="ghost" data-n="'+r.id+'">Rename</button><button class="ghost" data-d="'+r.id+'">Delete</button></div></div>').join('')||'<p class="mute">No reports yet.</p>';
+}
+drawReports();
+function dlg(title,msg,val){return new Promise(r=>{
+  const i=$('#di');$('#dt').textContent=title;$('#dm').textContent=msg||'';i.classList.toggle('hide',val==null);i.value=val||'';$('#dlg').classList.remove('hide');(val==null?$('#dok'):i).focus();
+  const done=v=>{$('#dlg').classList.add('hide');r(v)};
+  $('#dok').onclick=()=>done(val==null?true:i.value.trim());$('#dno').onclick=()=>done(null);
+})}
+function view(r){
+  if(!r.url){toast('Sample report: no file attached in this demo');return}
+  if(r.pdf){if(!window.open(r.url,'_blank'))toast('Allow pop-ups to open the PDF');return}
+  $('#pvt').textContent=r.name;$('#pvi').src=r.url;$('#pv').classList.remove('hide');
+}
+$('#pvc').onclick=()=>$('#pv').classList.add('hide');
+$('#rlist').onclick=async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const r=reports.find(x=>x.id===+(b.dataset.v||b.dataset.n||b.dataset.d));if(!r)return;
+  if(b.dataset.v)view(r);
+  if(b.dataset.n){const n=await dlg('Rename report','Enter a new name.',r.name);if(n){r.name=n.slice(0,80);drawReports();toast('Renamed')}}
+  if(b.dataset.d&&await dlg('Delete report?','It will be moved to the trash in your Google Drive folder.')){reports.splice(reports.indexOf(r),1);drawReports();toast('Report deleted')}
+};
+$('#ubtn').onclick=async()=>{
+  const f=$('#uf').files[0]||$('#us').files[0],m=$('#umsg');m.textContent='';
+  if(!f){m.textContent='Choose a file or scan a document.';return}
+  const type=ALLOWED[f.type]||EXT[(f.name.split('.').pop()||'').toLowerCase()];
+  if(!type){m.textContent='Only PDF, PNG, JPG or JPEG files are allowed.';return}
+  if(f.size>4*1048576){m.textContent='File is too large (max 4 MB).';return}
+  const name=($('#un').value.trim()||f.name.replace(/\.[^.]+$/,'')).slice(0,80);
+  const b=$('#ubtn');b.disabled=true;b.textContent='Uploading to Drive…';
+  const url=type==='PDF'?URL.createObjectURL(f):await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)});
+  setTimeout(()=>{
+    reports.unshift({id:rid++,name,type,size:f.size,date:new Date().toISOString().slice(0,10),url,pdf:type==='PDF'});
+    drawReports();$('#uf').value='';$('#us').value='';$('#un').value='';b.disabled=false;b.textContent='Upload to Drive';toast('Report saved to Drive (demo)');
+  },900);
+};
 </script>
 </body>
 </html>
